@@ -1,0 +1,101 @@
+# AI Dev Team - Full Epic Processing Workflow
+# Triggers when an Epic issue is created and processes it through all personas
+
+name: Process Epic
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  process-epic:
+    name: Process Epic with AI Team
+    runs-on: ubuntu-latest
+    # Only run for issues with 'epic' label OR title starting with [EPIC]
+    if: |
+      (github.event.action == 'opened' && startsWith(github.event.issue.title, '[EPIC]')) ||
+      (github.event.action == 'labeled' && github.event.label.name == 'epic')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          pip install openai PyGithub
+      
+      - name: Add 'processing' label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              labels: ['ai-processing']
+            });
+      
+      - name: Process Epic
+        id: process
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO: ${{ github.event.repository.name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          python scripts/process_epic.py
+      
+      - name: Remove 'processing' label
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                name: 'ai-processing'
+              });
+            } catch (e) {
+              console.log('Label not found, skipping removal');
+            }
+            
+            // Add 'processed' label on success
+            if ('${{ job.status }}' === 'success') {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                labels: ['ai-processed']
+              });
+            }
+      
+      - name: Handle failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: `## ❌ AI Dev Team Processing Failed
+              
+              There was an error processing this Epic. Please check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+              
+              Common issues:
+              - Missing \`OPENAI_API_KEY\` secret
+              - Rate limiting
+              - Invalid Epic format
+              
+              You can retry by removing and re-adding the \`epic\` label.`
+            });

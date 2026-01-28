@@ -1,0 +1,190 @@
+# AI Dev Team - Automatic Issue Processing
+# This workflow triggers the AI team when issues are created or updated
+
+name: AI Dev Team Trigger
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # ============================================
+  # Process Epic Issues
+  # ============================================
+  process-epic:
+    name: Process Epic
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' && 
+      github.event.action == 'opened' &&
+      contains(github.event.issue.labels.*.name, 'epic')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install openai PyGithub
+      
+      - name: Process Epic with AI Team
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO: ${{ github.event.repository.name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          python -c "
+          import os
+          import json
+          from github import Github
+
+          # Connect to GitHub
+          g = Github(os.environ['GITHUB_TOKEN'])
+          repo = g.get_repo(f\"{os.environ['GITHUB_OWNER']}/{os.environ['GITHUB_REPO']}\")
+          issue = repo.get_issue(int(os.environ['ISSUE_NUMBER']))
+
+          # Add processing comment
+          issue.create_comment('''## 🤖 AI Dev Team Activated
+
+          I'm processing this Epic. Here's what will happen:
+
+          1. **Produkt-Paula** will break this down into User Stories
+          2. **Strategiska-Stina** will assess strategic alignment  
+          3. **Arkitekt-Alf** will design the architecture
+          4. **Synthesizer** will create a unified plan
+
+          Please wait while I analyze this Epic...
+
+          ---
+          *Processing started at $(date -u +\"%Y-%m-%dT%H:%M:%SZ\")*
+          ''')
+
+          print(f'Processing Epic #{issue.number}: {issue.title}')
+          "
+
+  # ============================================
+  # Process @ai-team mentions
+  # ============================================
+  process-mention:
+    name: Process AI Team Mention
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issue_comment' &&
+      contains(github.event.comment.body, '@ai-team')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install PyGithub openai
+      
+      - name: Process AI Team Command
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO: ${{ github.event.repository.name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+        run: |
+          python -c "
+          import os
+          from github import Github
+
+          g = Github(os.environ['GITHUB_TOKEN'])
+          repo = g.get_repo(f\"{os.environ['GITHUB_OWNER']}/{os.environ['GITHUB_REPO']}\")
+          issue = repo.get_issue(int(os.environ['ISSUE_NUMBER']))
+
+          comment_body = os.environ['COMMENT_BODY']
+          
+          # Parse command
+          if '@ai-team help' in comment_body.lower():
+              issue.create_comment('''## 🤖 AI Dev Team Commands
+
+          Available commands:
+          - \`@ai-team help\` - Show this help
+          - \`@ai-team breakdown\` - Break down this issue into tasks
+          - \`@ai-team review\` - Request a review from the team
+          - \`@ai-team status\` - Show current processing status
+          - \`@ai-team implement\` - Start implementation (for tasks)
+
+          **Personas available:**
+          - 👩‍💼 Paula (Product) - \`@ai-team ask paula\`
+          - 📊 Stina (Strategy) - \`@ai-team ask stina\`
+          - 🏗️ Alf (Architecture) - \`@ai-team ask alf\`
+          - 💻 Uffe (Development) - \`@ai-team ask uffe\`
+          - 🧪 Tina (Testing) - \`@ai-team ask tina\`
+          - 📝 Daniel (Docs) - \`@ai-team ask daniel\`
+          - 🔒 Sara (Security) - \`@ai-team ask sara\`
+          - 🚀 David (DevOps) - \`@ai-team ask david\`
+          ''')
+          else:
+              issue.create_comment(f'''## 🤖 AI Dev Team
+
+          Received command from @{os.environ['COMMENT_AUTHOR']}. Processing...
+
+          *Use \`@ai-team help\` to see available commands.*
+          ''')
+
+          print('Command processed')
+          "
+
+  # ============================================
+  # Auto-label new issues
+  # ============================================
+  auto-label:
+    name: Auto-label Issues
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    
+    steps:
+      - name: Label based on title
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const title = issue.title.toLowerCase();
+            const labels = [];
+            
+            if (title.includes('[epic]')) {
+              labels.push('epic');
+            } else if (title.includes('[story]')) {
+              labels.push('story');
+            } else if (title.includes('[task]')) {
+              labels.push('task');
+            } else if (title.includes('[bug]')) {
+              labels.push('bug');
+            }
+            
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+              console.log(`Added labels: ${labels.join(', ')}`);
+            }
