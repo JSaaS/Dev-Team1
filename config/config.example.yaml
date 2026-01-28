@@ -1,0 +1,148 @@
+# AI Dev Team v2 - Configuration
+# Copy this to config.yaml and fill in your values
+
+# GitHub Integration
+github:
+  owner: "your-org-or-username"
+  repo: "your-repo-name"
+  default_branch: "main"
+  integration_branch: "develop"
+  # Token is loaded from GITHUB_TOKEN environment variable
+
+# Persona Configuration
+personas:
+  produkt_paula:
+    model: "gpt-4.1"
+    temperature: 0.7
+    max_tokens: 4096
+    
+  strategiska_stina:
+    model: "gpt-4.1"
+    temperature: 0.7
+    max_tokens: 4096
+    
+  arkitekt_alf:
+    model: "gpt-4.1"
+    temperature: 0.7
+    max_tokens: 4096
+    review_types:
+      - architecture
+      - design
+      - api_contracts
+    
+  utvecklar_uffe:
+    model: "gpt-4.1"
+    temperature: 0.3  # Lower for more deterministic code
+    max_tokens: 8192
+    languages:
+      - python
+      - typescript
+      - javascript
+    coding_standards:
+      - type_hints
+      - docstrings
+      - tests_required
+    
+  test_tina:
+    model: "gpt-4.1"
+    temperature: 0.5
+    max_tokens: 4096
+    test_frameworks:
+      - pytest
+      - jest
+    coverage_threshold: 80
+    
+  dok_daniel:
+    model: "gpt-4.1"
+    temperature: 0.6
+    max_tokens: 4096
+    documentation_types:
+      - readme
+      - api_docs
+      - changelog
+      - docstrings
+    
+  sakerhets_sara:
+    model: "gpt-4.1"
+    temperature: 0.5
+    max_tokens: 4096
+    security_standards:
+      - owasp_top_10
+      - cwe
+    severity_levels:
+      critical: blocks_merge
+      high: blocks_merge
+      medium: warning
+      low: observation
+    
+  devops_david:
+    model: "gpt-4.1"
+    temperature: 0.4
+    max_tokens: 4096
+    ci_platforms:
+      - github_actions
+    container_registry: "ghcr.io"
+    
+  synthesizer:
+    model: "gpt-4.1"
+    temperature: 0.6
+    max_tokens: 4096
+
+# Workflow Configuration
+workflow:
+  # Review requirements
+  require_reviews: 2
+  required_reviewers:
+    - arkitekt_alf
+    - sakerhets_sara
+  
+  # Auto-merge settings
+  auto_merge: true
+  merge_method: "squash"  # merge, squash, rebase
+  
+  # CI requirements
+  ci_required: true
+  required_checks:
+    - lint
+    - test
+    - security_scan
+  
+  # Branch protection
+  branch_protection: true
+  protect_branches:
+    - main
+    - develop
+
+# Work Item Defaults
+work_items:
+  epic:
+    default_labels:
+      - epic
+      - needs-breakdown
+    
+  story:
+    default_labels:
+      - story
+    max_story_points: 13
+    
+  task:
+    default_labels:
+      - task
+    require_acceptance_criteria: true
+    
+  bug:
+    default_labels:
+      - bug
+    require_severity: true
+
+# Logging
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "ai_dev_team.log"
+
+# Output
+output:
+  directory: "./output"
+  save_all_responses: true
+  generate_reports: true

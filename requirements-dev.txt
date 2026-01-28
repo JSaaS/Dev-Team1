@@ -1,0 +1,19 @@
+# AI Dev Team v2 - Development Dependencies
+
+# Testing
+pytest>=8.0.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.23.0
+
+# Linting & Formatting
+ruff>=0.2.0
+black>=24.1.0
+isort>=5.13.0
+mypy>=1.8.0
+
+# Security
+bandit>=1.7.0
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.5.0

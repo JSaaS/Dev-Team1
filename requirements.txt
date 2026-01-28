@@ -1,0 +1,22 @@
+# AI Dev Team v2 - Core Dependencies
+
+# OpenAI Agents SDK (for persona management)
+agents>=0.1.0
+
+# GitHub Integration
+PyGithub>=2.1.0
+
+# Async support
+asyncio-throttle>=1.0.0
+aiohttp>=3.9.0
+
+# Configuration
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Web server (for webhooks)
+flask>=3.0.0
+gunicorn>=21.0.0
+
+# Utilities
+python-dateutil>=2.8.0
