@@ -1,97 +1,85 @@
 # API Documentation
 
-## Overview
-This document provides an overview of the API endpoints available in the application. Each endpoint is described with its purpose, request method, required parameters, and response structure.
+This document provides a structured overview of the API endpoints available in the project. Each section will detail the purpose, request format, response format, and any relevant notes for each endpoint.
 
 ## Table of Contents
-1. [Authentication](#authentication)
-2. [Tasks](#tasks)
+
+1. [Introduction](#introduction)
+2. [Authentication](#authentication)
+3. [Endpoints](#endpoints)
    - [Create Task](#create-task)
    - [List Tasks](#list-tasks)
    - [Update Task](#update-task)
    - [Delete Task](#delete-task)
+4. [Error Handling](#error-handling)
+5. [Versioning](#versioning)
+6. [Changelog](#changelog)
+
+## Introduction
+
+This API allows users to manage tasks effectively. It supports operations to create, list, update, and delete tasks.
 
 ## Authentication
-All endpoints require authentication via an API key. Include the API key in the request headers as follows:
 
-```
-Authorization: Bearer YOUR_API_KEY
-```
+Describe the authentication mechanism here. For example, token-based authentication, OAuth, etc.
 
-## Tasks
+## Endpoints
 
 ### Create Task
-- **Endpoint:** `/api/tasks`
-- **Method:** `POST`
-- **Description:** Create a new task.
-- **Request Body:**
+- **URL**: `/api/tasks`
+- **Method**: `POST`
+- **Description**: Creates a new task.
+- **Request Body**: 
   ```json
   {
     "title": "string",
-    "description": "string",
-    "due_date": "YYYY-MM-DD"
+    "description": "string"
   }
   ```
-- **Response:**
-  ```json
-  {
-    "id": "integer",
-    "title": "string",
-    "description": "string",
-    "due_date": "YYYY-MM-DD",
-    "status": "string"
-  }
-  ```
+- **Response**:
+  - **Success**: HTTP 201 Created
+  - **Failure**: HTTP 400 Bad Request
 
 ### List Tasks
-- **Endpoint:** `/api/tasks`
-- **Method:** `GET`
-- **Description:** Retrieve a list of all tasks.
-- **Response:**
-  ```json
-  [
-    {
-      "id": "integer",
-      "title": "string",
-      "description": "string",
-      "due_date": "YYYY-MM-DD",
-      "status": "string"
-    },
-    ...
-  ]
-  ```
+- **URL**: `/api/tasks`
+- **Method**: `GET`
+- **Description**: Retrieves a list of tasks.
+- **Response**:
+  - **Success**: HTTP 200 OK
+  - **Failure**: HTTP 404 Not Found
 
 ### Update Task
-- **Endpoint:** `/api/tasks/{id}`
-- **Method:** `PUT`
-- **Description:** Update the details of an existing task.
-- **Request Body:**
+- **URL**: `/api/tasks/{id}`
+- **Method**: `PUT`
+- **Description**: Updates an existing task.
+- **Request Body**:
   ```json
   {
     "title": "string",
     "description": "string",
-    "due_date": "YYYY-MM-DD",
     "status": "string"
   }
   ```
-- **Response:**
-  ```json
-  {
-    "id": "integer",
-    "title": "string",
-    "description": "string",
-    "due_date": "YYYY-MM-DD",
-    "status": "string"
-  }
-  ```
+- **Response**:
+  - **Success**: HTTP 200 OK
+  - **Failure**: HTTP 404 Not Found
 
 ### Delete Task
-- **Endpoint:** `/api/tasks/{id}`
-- **Method:** `DELETE`
-- **Description:** Delete a task by its ID.
-- **Response:**
-  ```json
-  {
-    "message": "Task deleted successfully."
-  }
-  ```
+- **URL**: `/api/tasks/{id}`
+- **Method**: `DELETE`
+- **Description**: Deletes a task.
+- **Response**:
+  - **Success**: HTTP 204 No Content
+  - **Failure**: HTTP 404 Not Found
+
+## Error Handling
+
+Describe how errors are handled in the API, including error codes and messages.
+
+## Versioning
+
+Information about API versioning strategy.
+
+## Changelog
+
+Track changes to the API documentation here.
