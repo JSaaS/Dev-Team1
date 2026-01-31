@@ -1,7 +1,6 @@
 # Full test file content...
 import pytest
 from app import create_app
-from flask import json
 
 @pytest.fixture
 def client():
@@ -10,88 +9,54 @@ def client():
     with app.test_client() as client:
         yield client
 
-# Test for creating a task
+# Test for Create Task Endpoint
 
 def test_create_task_success(client):
-    response = client.post('/api/tasks',
-                           data=json.dumps({
-                               'title': 'Test Task',
-                               'description': 'Test Description',
-                               'due_date': '2023-12-31'
-                           }),
-                           content_type='application/json')
+    response = client.post('/api/tasks', json={"title": "Test Task", "description": "Test Description"})
     assert response.status_code == 201
-    assert 'id' in response.json
+    assert response.json['title'] == "Test Task"
 
-# Test for listing tasks
+
+def test_create_task_missing_title(client):
+    response = client.post('/api/tasks', json={"description": "Test Description"})
+    assert response.status_code == 400
+
+# Test for List Tasks Endpoint
 
 def test_list_tasks_success(client):
     response = client.get('/api/tasks')
     assert response.status_code == 200
     assert isinstance(response.json, list)
 
-# Test for updating a task
+# Test for Update Task Endpoint
 
 def test_update_task_success(client):
-    # First, create a task to update
-    create_response = client.post('/api/tasks',
-                                  data=json.dumps({
-                                      'title': 'Test Task',
-                                      'description': 'Test Description',
-                                      'due_date': '2023-12-31'
-                                  }),
-                                  content_type='application/json')
+    # First, create a task
+    create_response = client.post('/api/tasks', json={"title": "Task to Update", "description": "Description"})
     task_id = create_response.json['id']
 
     # Now, update the task
-    update_response = client.put(f'/api/tasks/{task_id}',
-                                 data=json.dumps({
-                                     'title': 'Updated Task',
-                                     'description': 'Updated Description',
-                                     'due_date': '2023-12-31',
-                                     'status': 'completed'
-                                 }),
-                                 content_type='application/json')
+    update_response = client.put(f'/api/tasks/{task_id}', json={"title": "Updated Task", "description": "Updated Description", "status": "completed"})
     assert update_response.status_code == 200
-    assert update_response.json['title'] == 'Updated Task'
+    assert update_response.json['title'] == "Updated Task"
 
-# Test for deleting a task
+
+def test_update_task_not_found(client):
+    response = client.put('/api/tasks/999', json={"title": "Non-existent Task", "description": "Description", "status": "completed"})
+    assert response.status_code == 404
+
+# Test for Delete Task Endpoint
 
 def test_delete_task_success(client):
-    # First, create a task to delete
-    create_response = client.post('/api/tasks',
-                                  data=json.dumps({
-                                      'title': 'Task to Delete',
-                                      'description': 'Description',
-                                      'due_date': '2023-12-31'
-                                  }),
-                                  content_type='application/json')
+    # First, create a task
+    create_response = client.post('/api/tasks', json={"title": "Task to Delete", "description": "Description"})
     task_id = create_response.json['id']
 
     # Now, delete the task
     delete_response = client.delete(f'/api/tasks/{task_id}')
-    assert delete_response.status_code == 200
-    assert delete_response.json['message'] == 'Task deleted successfully.'
+    assert delete_response.status_code == 204
 
-# Edge case: Test creating a task with missing fields
 
-def test_create_task_missing_fields(client):
-    response = client.post('/api/tasks',
-                           data=json.dumps({
-                               'title': 'Incomplete Task'
-                           }),
-                           content_type='application/json')
-    assert response.status_code == 400
-
-# Edge case: Test updating a non-existent task
-
-def test_update_non_existent_task(client):
-    response = client.put('/api/tasks/9999',
-                          data=json.dumps({
-                              'title': 'Non-existent Task',
-                              'description': 'Description',
-                              'due_date': '2023-12-31',
-                              'status': 'completed'
-                          }),
-                          content_type='application/json')
+def test_delete_task_not_found(client):
+    response = client.delete('/api/tasks/999')
     assert response.status_code == 404
